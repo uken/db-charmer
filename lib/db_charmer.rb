@@ -15,17 +15,21 @@ module DbCharmer
   #-------------------------------------------------------------------------------------------------
   # Used in all Rails4-specific places
   def self.rails4?
-    ::ActiveRecord::VERSION::MAJOR > 3
+    ::ActiveRecord::VERSION::MAJOR == 4
   end
 
   # Used in all Rails3-specific places
   def self.rails3?
-    ::ActiveRecord::VERSION::MAJOR > 2
+    ::ActiveRecord::VERSION::MAJOR == 3
   end
 
   # Used in all Rails3.1-specific places
   def self.rails31?
     (rails3? && ::ActiveRecord::VERSION::MINOR >= 1) || rails4?
+  end
+
+  def self.rails41?
+    (rails4? && ::ActiveRecord::VERSION::MINOR >= 1)
   end
 
   # Detect broken Rails version
@@ -179,8 +183,11 @@ ActiveRecord::Base.extend(DbCharmer::ActiveRecord::DbMagic)
 if DbCharmer.rails31?
   require 'db_charmer/rails31/active_record/preloader/association'
   ActiveRecord::Associations::Preloader::Association.send(:include, DbCharmer::ActiveRecord::Preloader::Association)
-  require 'db_charmer/rails31/active_record/preloader/has_and_belongs_to_many'
-  ActiveRecord::Associations::Preloader::HasAndBelongsToMany.send(:include, DbCharmer::ActiveRecord::Preloader::HasAndBelongsToMany)
+
+  if not DbCharmer.rails41?
+    require 'db_charmer/rails31/active_record/preloader/has_and_belongs_to_many'
+    ActiveRecord::Associations::Preloader::HasAndBelongsToMany.send(:include, DbCharmer::ActiveRecord::Preloader::HasAndBelongsToMany)
+  end
 else
   require 'db_charmer/active_record/association_preload'
   ActiveRecord::Base.extend(DbCharmer::ActiveRecord::AssociationPreload)
